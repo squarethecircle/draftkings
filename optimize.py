@@ -149,17 +149,11 @@ if __name__ == "__main__":
             if roster.projected() > max_val:
                 max_val = roster.projected()
                 max_roster = roster
+                if int(args.w) > 0:
+                    for player in max_roster.sorted_players():
+                        player.score = float(get_score(player.name,int(args.w)))
         print max_roster
         score = 0
-        if int(args.w) > 0:
-            for player in max_roster.sorted_players():
-                player_score = get_score(player.name,int(args.w))
-                if len(player_score) > 0:
-                    print player.name+": "+str(float(player_score))
-                    score += float(player_score)
-                else:
-                    print player.name+": DID NOT PLAY"
-            print "REAL SCORE: " + str(score) + '\n'
         max_names = [player.name for player in max_roster.players]
         chosen_dict[len(chosen_dict)] = max_names
 

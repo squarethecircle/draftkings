@@ -22,6 +22,9 @@ class Roster:
     def projected(self):
         return sum(map(lambda x: x.proj, self.players))
 
+    def real(self):
+        return sum(map(lambda x: x.score, self.players))
+
     def position_order(self, player):
         return self.POSITION_ORDER[player.pos]
 
@@ -30,8 +33,9 @@ class Roster:
 
     def __repr__(self):
         s = '\n'.join(str(x) for x in self.sorted_players())
-        s += "\n\nProjected Score: %s" % self.projected()
+        s += "\nProjected Score: %s" % self.projected()
         s += "\tCost: $%s" % self.spent()
+        s += "\nReal Score: %d\n" % self.real()
         return s
 
 class Player:
@@ -42,16 +46,17 @@ class Player:
         self.proj = proj
         self.marked = marked
         self.cost_ranking = 0
+        self.score = 0
 
     def player_report(self):
         print self.pos + ' '+ self.name + \
         ' (' + str(self.cost) + ')' + ' (' + str(self.proj) + ')'
 
     def __repr__(self):
-        return "[{0: <2}] {1: <20}(${2}, {3})".format(self.pos, \
+        return "[{0: <2}] {1: <20}(${2}, {3}, {4})".format(self.pos, \
                                     self.name, \
                                     self.cost, \
-                                    self.proj)
+                                    self.proj, self.score)
 
 class Team:
     def __init__(self, give):
