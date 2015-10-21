@@ -24,7 +24,7 @@ for opt in OPTIMIZE_COMMAND_LINE:
 
 args = parser.parse_args()
 MAX_SIMILARITY = int(args.s)
-df = pd.load('data/histdata')
+df = pd.read_pickle('data/histdata')
 get_score=lambda n,w:df[df['Name'] == n][df['Week']==w]['DK points']
 
 
