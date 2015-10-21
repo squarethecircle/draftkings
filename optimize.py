@@ -87,9 +87,17 @@ def run(max_flex, maxed_over, remove, chosen_dict,week):
                              pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
     all_players = []
-    for i, row in df[df['Week']==week].iterrows():
-        if not np.isnan(row['DK salary']) and row['DK salary'] > 0:
-            all_players.append(Player(row['Pos'], row['Name'], row['DK salary']))
+    if week == 0:
+        with open('data/DKSalariesCurrent.csv', 'rb') as csvfile:
+            csvdata = csv.reader(csvfile, skipinitialspace=True)
+
+            for idx, row in enumerate(csvdata):
+                if idx > 0:
+                    all_players.append(Player(row[0], row[1], row[2]))
+    else:
+        for i, row in df[df['Week']==week].iterrows():
+            if not np.isnan(row['DK salary']) and row['DK salary'] > 0:
+                all_players.append(Player(row['Pos'], row['Name'], row['DK salary']))
     # give each a ranking
     all_players = sorted(all_players, key=lambda x: x.cost, reverse=True)
     for idx, x in enumerate(all_players):
@@ -143,14 +151,15 @@ if __name__ == "__main__":
                 max_roster = roster
         print max_roster
         score = 0
-        for player in max_roster.sorted_players():
-            player_score = get_score(player.name,int(args.w))
-            if len(player_score) > 0:
-                print player.name+": "+str(float(player_score))
-                score += float(player_score)
-            else:
-                print player.name+": DID NOT PLAY"
-        print "REAL SCORE: " + str(score) + '\n'
+        if int(args.w) > 0:
+            for player in max_roster.sorted_players():
+                player_score = get_score(player.name,int(args.w))
+                if len(player_score) > 0:
+                    print player.name+": "+str(float(player_score))
+                    score += float(player_score)
+                else:
+                    print player.name+": DID NOT PLAY"
+            print "REAL SCORE: " + str(score) + '\n'
         max_names = [player.name for player in max_roster.players]
         chosen_dict[len(chosen_dict)] = max_names
 
