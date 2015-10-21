@@ -64,10 +64,10 @@ def run_solver(solver, all_players, max_flex, chosen_dict):
 
     was_chosen = lambda r,p: int(r in chosen_dict and p in chosen_dict[r])
     for lineup_num in range(len(chosen_dict)):
-        exec "diversity_criterion"+str(lineup_num)+"=solver.Constraint(0,MAX_SIMILARITY)" in globals(), locals()
+        diversity_criterion=solver.Constraint(0,MAX_SIMILARITY)
         for i, player in enumerate(all_players):
-            exec "diversity_criterion"+str(lineup_num)+".SetCoefficient(variables[i],was_chosen(lineup_num,player.name))" in globals(), locals()
-
+            res=was_chosen(lineup_num,player.name)
+            diversity_criterion.SetCoefficient(variables[i],res)
     for position, limit in max_flex:
         position_cap = solver.Constraint(0, limit)
 
@@ -102,7 +102,7 @@ def run(max_flex, maxed_over, remove, chosen_dict,week):
         for row in csvdata:
             player = filter(lambda x: x.name in row['playername'], all_players)
             try:
-                player[0].proj = float(float(row['points']))
+                player[0].proj = float(row['points'])
                 player[0].marked = 'Y'
             except:
                 pass
@@ -151,7 +151,7 @@ if __name__ == "__main__":
             else:
                 print player.name+": DID NOT PLAY"
         print "REAL SCORE: " + str(score) + '\n'
-        max_names = [player.name for player in roster.players]
+        max_names = [player.name for player in max_roster.players]
         chosen_dict[len(chosen_dict)] = max_names
 
 
