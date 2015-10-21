@@ -7,7 +7,7 @@ class Roster:
         "RB": 1,
         "WR": 2,
         "TE": 3,
-        "Def": 4
+        "DST": 4
     }
 
     def __init__(self):
