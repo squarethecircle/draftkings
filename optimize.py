@@ -25,7 +25,7 @@ for opt in OPTIMIZE_COMMAND_LINE:
 args = parser.parse_args()
 MAX_SIMILARITY = int(args.s)
 df = pd.read_pickle('data/histdata')
-get_score=lambda n,w:df[df['Name'] == n][df['Week']==w]['DK points']
+get_score=lambda n,w:df[df['PID'] == n][df['Week']==w]['DK points']
 
 
 def check_missing_players(all_players, min_cost, e_raise):
@@ -69,15 +69,12 @@ def run_solver(solver, all_players, max_flex, chosen_dict):
             res=was_chosen(lineup_num,player.name)
             diversity_criterion.SetCoefficient(variables[i],res)
     for position, limit in max_flex:
-        position_cap = solver.Constraint(0, limit)
+        position_cap = solver.Constraint(limit, limit)
 
         for i, player in enumerate(all_players):
             if position == player.pos:
                 position_cap.SetCoefficient(variables[i], 1)
 
-    size_cap = solver.Constraint(ROSTER_SIZE, ROSTER_SIZE)
-    for variable in variables:
-        size_cap.SetCoefficient(variable, 1)
 
     return variables, solver.Solve()
 
@@ -90,14 +87,13 @@ def run(max_flex, maxed_over, remove, chosen_dict,week):
     if week == 0:
         with open('data/DKSalariesCurrent.csv', 'rb') as csvfile:
             csvdata = csv.reader(csvfile, skipinitialspace=True)
-
             for idx, row in enumerate(csvdata):
                 if idx > 0:
                     all_players.append(Player(row[0], row[1], row[2]))
     else:
         for i, row in df[df['Week']==week].iterrows():
             if not np.isnan(row['DK salary']) and row['DK salary'] > 0:
-                all_players.append(Player(row['Pos'], row['Name'], row['DK salary']))
+                all_players.append(Player(row['Pos'], row['PID'], row['DK salary']))
     # give each a ranking
     all_players = sorted(all_players, key=lambda x: x.cost, reverse=True)
     for idx, x in enumerate(all_players):
