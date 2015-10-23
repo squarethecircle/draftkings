@@ -14,6 +14,8 @@ from orm import Player, Roster
 from constants import *
 import pandas as pd
 import warnings
+import csv
+
 warnings.filterwarnings("ignore")
 
 
@@ -52,7 +54,7 @@ def run_solver(solver, all_players, max_flex, chosen_dict):
     variables = []
 
     for player in all_players:
-        variables.append(solver.IntVar(0, 1, player.name))
+        variables.append(solver.IntVar(0, 1, player.pid))
       
     objective = solver.Objective()
     objective.SetMaximization()
@@ -66,7 +68,7 @@ def run_solver(solver, all_players, max_flex, chosen_dict):
     for lineup_num in range(len(chosen_dict)):
         diversity_criterion=solver.Constraint(0,MAX_SIMILARITY)
         for i, player in enumerate(all_players):
-            res=was_chosen(lineup_num,player.name)
+            res=was_chosen(lineup_num,player.pid)
             diversity_criterion.SetCoefficient(variables[i],res)
     for position, limit in max_flex:
         position_cap = solver.Constraint(limit, limit)
@@ -89,11 +91,11 @@ def run(max_flex, maxed_over, remove, chosen_dict,week):
             csvdata = csv.reader(csvfile, skipinitialspace=True)
             for idx, row in enumerate(csvdata):
                 if idx > 0:
-                    all_players.append(Player(row[0], row[1], row[2]))
+                    all_players.append(Player(row[0],generate_pid(row[1],row[0]),row[1],row[2]))
     else:
         for i, row in df[df['Week']==week].iterrows():
             if not np.isnan(row['DK salary']) and row['DK salary'] > 0:
-                all_players.append(Player(row['Pos'], row['PID'], row['DK salary']))
+                all_players.append(Player(row['Pos'], row['PID'],row['Name'],row['DK salary']))
     # give each a ranking
     all_players = sorted(all_players, key=lambda x: x.cost, reverse=True)
     for idx, x in enumerate(all_players):
@@ -104,7 +106,7 @@ def run(max_flex, maxed_over, remove, chosen_dict,week):
         worked = 0
 
         for row in csvdata:
-            player = filter(lambda x: x.name in row['playername'], all_players)
+            player = filter(lambda x: x.pid in row['playername'], all_players)
             try:
                 player[0].proj = float(row['points'])
                 player[0].marked = 'Y'
@@ -114,7 +116,7 @@ def run(max_flex, maxed_over, remove, chosen_dict,week):
     #check_missing_players(all_players, args.sp, args.mp)
 
     # remove previously optimize
-    all_players = filter(lambda x: x.name not in remove, all_players)
+    all_players = filter(lambda x: x.pid not in remove, all_players)
 
     variables, solution = run_solver(solver, all_players, max_flex,chosen_dict)
 
@@ -147,11 +149,11 @@ if __name__ == "__main__":
                 max_roster = roster
                 if int(args.w) > 0:
                     for player in max_roster.sorted_players():
-                        player.score = float(get_score(player.name,int(args.w)))
+                        player.score = float(get_score(player.pid,int(args.w)))
         print max_roster
         score = 0
-        max_names = [player.name for player in max_roster.players]
-        chosen_dict[len(chosen_dict)] = max_names
+        max_pids = [player.pid for player in max_roster.players]
+        chosen_dict[len(chosen_dict)] = max_pids
 
 
 

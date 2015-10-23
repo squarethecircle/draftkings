@@ -39,9 +39,10 @@ class Roster:
         return s
 
 class Player:
-    def __init__(self, pos, name, cost, proj=0, marked=None):
+    def __init__(self, pos, pid, name, cost, proj=0, marked=None):
         self.pos = pos
         self.name = name
+        self.pid = pid
         self.cost = int(cost)
         self.proj = proj
         self.marked = marked

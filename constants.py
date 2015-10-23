@@ -43,4 +43,39 @@ OPTIMIZE_COMMAND_LINE = [
   ['-i', 'iterations to run', 3]
 ]
 
+FP_FLEX = 'ppr-flex'
+FP_QBFLEX = 'ppr-qb-flex'
+FP_QB = 'qb'
+FP_DST = 'dst'
 
+PROJECTION_TYPE = {FP_FLEX: ['WR','RB','TE'], FP_QBFLEX: ['QB','WR','RB','TE'], FP_QB: ['QB'], FP_DST:['DST']}
+
+ROTOGURU_DST_NAMES = {'Detroit Defense': 'Lions', 'New York G Defense': 'Giants', 'New York J Defense': 'Jets', 
+'Jacksonville Defense': 'Jaguars', 'Buffalo Defense': 'Bills', 'Seattle Defense': 'Seahawks', 
+'Denver Defense': 'Broncos', 'Indianapolis Defense': 'Colts', 'Tampa Bay Defense': 'Buccaneers', 
+'Arizona Defense': 'Cardinals', 'Green Bay Defense': 'Packers', 'Tennessee Defense': 'Titans', 
+'Cincinnati Defense': 'Bengals', 'San Francisco Defense': '49ers', 'New Orleans Defense': 'Saints', 
+'Washington Defense': 'Redskins', 'Oakland Defense': 'Raiders', 'Carolina Defense': 'Panthers', 
+'New England Defense': 'Patriots', 'Kansas City Defense': 'Chiefs', 'Minnesota Defense': 'Vikings', 
+'Chicago Defense': 'Bears', 'Pittsburgh Defense': 'Steelers', 'Philadelphia Defense': 'Eagles', 
+'San Diego Defense': 'Chargers', 'Miami Defense': 'Dolphins', 'Baltimore Defense': 'Ravens', 
+'Houston Defense': 'Texans', 'Dallas Defense': 'Cowboys', 'St. Louis Defense': 'Rams', 
+'Atlanta Defense': 'Falcons', 'Cleveland Defense': 'Browns'}
+
+FANPROS_DST_NAMES = {'Detroit Lions': 'Lions', 'New York Giants': 'Giants', 'New York Jets': 'Jets', 
+'Jacksonville Jaguars': 'Jaguars', 'Buffalo Bills': 'Bills', 'Seattle Seahawks': 'Seahawks', 
+'Denver Broncos': 'Broncos', 'Indianapolis Colts': 'Colts', 'Tampa Bay Buccaneers': 'Buccaneers', 
+'Arizona Cardinals': 'Cardinals', 'Green Bay Packers': 'Packers', 'Tennessee Titans': 'Titans', 
+'Cincinnati Bengals': 'Bengals', 'San Francisco 49ers': '49ers', 'New Orleans Saints': 'Saints', 
+'Washington Redskins': 'Redskins', 'Oakland Raiders': 'Raiders', 'Carolina Panthers': 'Panthers', 
+'New England Patriots': 'Patriots', 'Kansas City Chiefs': 'Chiefs', 'Minnesota Vikings': 'Vikings', 
+'Chicago Bears': 'Bears', 'Pittsburgh Steelers': 'Steelers', 'Philadelphia Eagles': 'Eagles', 
+'San Diego Chargers': 'Chargers', 'Miami Dolphins': 'Dolphins', 'Baltimore Ravens': 'Ravens', 
+'Houston Texans': 'Texans', 'Dallas Cowboys': 'Cowboys', 'St. Louis Rams': 'Rams', 
+'Atlanta Falcons': 'Falcons', 'Cleveland Browns': 'Browns'}
+
+def generate_pid(name, pos):
+  dst_replace = lambda t: FANPROS_DST_NAMES[t] if t in FANPROS_DST_NAMES else t
+  escape = lambda n: filter(lambda q: str.isalnum(q) or str.isspace(q),n)
+  underscore = lambda n: n.replace(' ','_')
+  return (underscore(escape(dst_replace(name)))+'_'+pos).upper()
