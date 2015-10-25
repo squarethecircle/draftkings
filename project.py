@@ -8,13 +8,13 @@ def calc_dan_model(hf,pos,week):
 	ranks = hf[hf['Pos'] == pos][hf['Week'] < week]['Avg Rank']
 	scores = hf[hf['Pos'] == pos][hf['Week'] < week]['DK points']
 	print pos, week
-	if pos in PROJECTION_TYPE[FP_QB] or pos in PROJECTION_TYPE[FP_DST]:
+	if pos in PROJECTION_TYPE[FP_DST]:
 		linear_fit = np.poly1d(np.polyfit(ranks,scores,1))
 		quadratic_fit = np.poly1d(np.polyfit(ranks,scores,2))
 		ret_func = lambda x: np.mean([linear_fit(x),quadratic_fit(x)])
 		print "r2 score is %f" % (r_squared(scores,map(ret_func,ranks)))
 		return ret_func
-	elif pos in PROJECTION_TYPE[FP_FLEX]:
+	elif pos in PROJECTION_TYPE[FP_QBFLEX]:
 		linear_fit = np.poly1d(np.polyfit(ranks,scores,1))
 		quadratic_fit = np.poly1d(np.polyfit(ranks,scores,2))
 		log_fit = np.poly1d(np.polyfit(np.log(ranks),scores,1))

@@ -87,7 +87,7 @@ if __name__ == '__main__':
 		h = grab_history(w)
 		time.sleep(2)
 		hf = new_history_dataframe(h)
-		for pos in [FP_QB,FP_FLEX,FP_DST]:
+		for pos in [FP_QBFLEX,FP_DST]:
 			p = grab_projections(w,pos)
 			df = new_rank_dataframe(p,pos)
 			comb = pd.merge(hf[['DK salary', 'DK points','PID','Pos']],df[['Name','Team',
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	final_frame = pd.concat(results,ignore_index = True)
 	final_frame.to_pickle('data/histdata')
 	cur_projs = []
-	for pos in [FP_QB,FP_FLEX,FP_DST]:
+	for pos in [FP_QBFLEX,FP_DST]:
 		p = grab_projections(w + 1,pos)
 		df = new_rank_dataframe(p,pos)
 		cur_projs.append(df)
