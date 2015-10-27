@@ -79,12 +79,14 @@ FANPROS_DST_NAMES = {'Detroit Lions': 'Lions', 'New York Giants': 'Giants', 'New
 def clean_name(nm):
     raw = nm.upper().replace('.', '').replace(' JR', '').replace(' SR', '')\
             .replace(' III', '').strip()
+    raw = filter(lambda q: str.isalnum(q) or str.isspace(q),raw)
     nsec = raw.split(' ')
     nsec[0] = nsec[0].replace('CHRISTOPHER', 'CHRIS')\
             .replace('MATTHEW', 'MATT')\
             .replace('DANIEL', 'DAN')\
             .replace('MICHAEL', 'MIKE')\
-            .replace('BENJAMIN', 'BEN')
+            .replace('BENJAMIN', 'BEN')\
+            .replace('STEVIE', 'STEVE')
     return ' '.join(nsec)
 
 def generate_pid(name, pos):

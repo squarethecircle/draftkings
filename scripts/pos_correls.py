@@ -1,14 +1,15 @@
 import sys
+import os
 sys.path.append('..')
 import collections
-from utils import *
+from constants import *
 import numpy as np
+import pandas as pd
 
 # Run like
 # python pos_correls.py C:/Users/YourUser/Dropbox/DFS/data/players
 
-dn = sys.argv[1]
-recs = proc_data(dn + '/raw')
+hf = pd.read_pickle('../data/histdata')
 
 def pairs(arr1, arr2):
     ret = []
@@ -17,7 +18,7 @@ def pairs(arr1, arr2):
             ret.append([a1, a2])
     return ret
 
-teams = set([r.team for r in recs])
+teams = set([v[0] for v in hf[['Team']].values])
 correls = collections.OrderedDict()
 correls['opp_qb'] = []
 correls['opp_wr'] = []
@@ -30,18 +31,21 @@ correls['wr_rb'] = []
 correls['wr_te'] = []
 correls['rb_te'] = []
 outputs = [',,' + ','.join(correls.keys()) + '\n']
-for year in [2014,2015]:
+for year in [2015]:
     for week in xrange(1,16):
-        thisweek = [r for r in recs if r.week==week and r.year==year]
+        tw = hf[hf['Week']==week]
+        if tw.empty:
+            continue
         for pr in correls:
             correls[pr] = []
         for t in teams:
-            thisteam = [r for r in thisweek if r.team==t]
-            opp_d = [r.dk_score for r in thisweek if r.opp==t and r.pos == 'DST']
-            qbs = [r.dk_score for r in thisteam if r.pos == 'QB']
-            wr = [r.dk_score for r in thisteam if r.pos == 'WR']
-            rb = [r.dk_score for r in thisteam if r.pos == 'RB']
-            te = [r.dk_score for r in thisteam if r.pos == 'TE']
+            tm = tw[tw['Team']==t]
+            opp_d = tw[tw.apply(lambda s: isinstance(s['Matchup'], str) and
+                s['Matchup'].split(' ')[2]==t, axis=1)][tw['Pos']=='DST']['DK points'].values
+            qbs = tm[tm['Pos']=='QB']['DK points'].values
+            wr = tm[tm['Pos']=='WR']['DK points'].values
+            rb = tm[tm['Pos']=='RB']['DK points'].values
+            te = tm[tm['Pos']=='TE']['DK points'].values
             correls['opp_qb'] += pairs(opp_d, qbs)
             correls['opp_wr'] += pairs(opp_d, wr)
             correls['opp_rb'] += pairs(opp_d, rb)
@@ -55,12 +59,12 @@ for year in [2014,2015]:
         line=''
         nonzero = False
         for pr in correls:
-            arr = np.asarray(correls[pr]).transpose()
+            arr = np.asarray(correls[pr]).transpose()[:,:50]
             corr = 0 if arr.size == 0 else np.corrcoef(arr)[0,1]
             if corr != 0 and not np.isnan(corr):
                 nonzero = True
             line = line + ',{:.4f}'.format(corr)
         if nonzero:
             outputs.append('{},{}'.format(year,week) + line + '\n')
-with open(os.path.join(dn, 'pos_correls.csv'), 'w') as wr:
+with open(os.path.join(sys.argv[1], 'pos_correls.csv'), 'w') as wr:
     wr.writelines(outputs)

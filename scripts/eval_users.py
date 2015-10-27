@@ -4,12 +4,12 @@ import operator
 import os
 import numpy as np
 import zipfile
-from utils import *
+from constants import *
 
 #################################################################################
 # Run like this:
 #
-# python process_standings.py [DATA_FOLDER]
+# python eval_users.py [DATA_FOLDER]
 #
 # [DATA_FOLDER] is a folder containing a subfolder marked '1', '2' etc for each
 # week. within each folder, put the raw zip files from draftkings contest as
@@ -24,7 +24,7 @@ pvals_by_week = {}
 for w in [w for w in os.listdir(dn) if os.path.isdir(os.path.join(dn, w))]:
     contests_by_week[w] = {}
     with open(os.path.join(dn, w, 'playervals.csv'), 'r') as re:
-        pvals_by_week[w] = dict((clean_name(x[0]), x[1]) for x in
+        pvals_by_week[w] = dict((' '.join(x[0].split('_')[:-1]), x[1]) for x in
                 map(lambda l: l.strip().split(','), re.readlines()))
     for zf in [f for f in os.listdir(os.path.join(dn, w)) if 'zip' in f]:
         z = zipfile.ZipFile(os.path.join(dn, w, zf))
@@ -60,28 +60,24 @@ for w in contests_by_week:
     mintot = 1e12
     pvals = pvals_by_week[w]
     users_thisweek = {}
+    not_found = {}
     for contest_id in contests_by_week[w]:
+        print contest_id
         outputs = ['Name,QB,RB1,RB2,WR1,WR2,WR3,TE,FLEX,DST,TOTAL\n']
         for s in contests_by_week[w][contest_id]:
-            lineup = conv_player_string(s[5])
+            lineup = conv_player_string(s[5].strip())
             if len(lineup) == 0:
                 continue
             allfound = True
             for l in lineup:
-                found = False
                 if lineup[l] in pvals:
                     lineup[l] = pvals[lineup[l]]
-                    found = True
                 else:
-                    for p in pvals:
-                        if p.split(' ')[-1] == lineup[l].strip():
-                            lineup[l] = pvals[p]
-                            found = True
-                            break
-                if not found:
                     allfound = False
                     if lineup[l] != 'LOCKED':
-                        print 'Not found: {}'.format(lineup[l])
+                        if lineup[l] not in not_found:
+                            not_found[lineup[l]] = 0
+                        not_found[lineup[l]] += 1
             if allfound:
                 lis = [lineup['QB1'],
                         lineup['RB1'],
@@ -99,14 +95,16 @@ for w in contests_by_week:
                     if tot < mintot:
                         mintot = tot
                 lis.append(tot)
-                username = s[2]
-                outputs.append('{},{},{},{},{},{},{},{},{},{},{}\n'.format(username, *lis))
+                username = s[2].split(' ')[0]
+                #outputs.append('{},{},{},{},{},{},{},{},{},{},{}\n'.format(username, *lis))
                 if username not in users_thisweek:
                     users_thisweek[username] = []
                 users_thisweek[username].append(tot)
-        with open(os.path.join(dn, w, 'processed_{}.csv'.format(contest_id)), 'w') as wr:
-            wr.writelines(outputs)
+        #with open(os.path.join(dn, w, 'processed_{}.csv'.format(contest_id)), 'w') as wr:
+        #    wr.writelines(outputs)
     rg = maxtot - mintot
+    for n in not_found:
+        print n, not_found[n]
     for username in users_thisweek:
         if username not in users:
             users[username]=[]
