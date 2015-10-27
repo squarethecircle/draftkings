@@ -74,8 +74,21 @@ FANPROS_DST_NAMES = {'Detroit Lions': 'Lions', 'New York Giants': 'Giants', 'New
 'Houston Texans': 'Texans', 'Dallas Cowboys': 'Cowboys', 'St. Louis Rams': 'Rams', 
 'Atlanta Falcons': 'Falcons', 'Cleveland Browns': 'Browns'}
 
+# standardizing names in this way matches 2-4 more people per week
+# in the dataset that otherwise would be key mismatches
+def clean_name(nm):
+    raw = nm.upper().replace('.', '').replace(' JR', '').replace(' SR', '')\
+            .replace(' III', '').strip()
+    nsec = raw.split(' ')
+    nsec[0] = nsec[0].replace('CHRISTOPHER', 'CHRIS')\
+            .replace('MATTHEW', 'MATT')\
+            .replace('DANIEL', 'DAN')\
+            .replace('MICHAEL', 'MIKE')\
+            .replace('BENJAMIN', 'BEN')
+    return ' '.join(nsec)
+
 def generate_pid(name, pos):
   dst_replace = lambda t: FANPROS_DST_NAMES[t] if t in FANPROS_DST_NAMES else t
   escape = lambda n: filter(lambda q: str.isalnum(q) or str.isspace(q),n)
   underscore = lambda n: n.replace(' ','_')
-  return (underscore(escape(dst_replace(name)))+'_'+pos).upper()
+  return (underscore(clean_name(escape(dst_replace(name))))+'_'+pos).upper()
