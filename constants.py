@@ -1,3 +1,5 @@
+CUR_WEEK = 8
+CUR_YEAR = 2015
 FFPRO = 'http://www.fantasypros.com/nfl/projections/'
 
 ALL_POS = ['QB', 'RB', 'WR', 'TE', 'DST']
@@ -37,14 +39,15 @@ ALL_LINEUPS = {
     'TE_MAX': POSITION_LIMITS_TE_MAX
 }
 
+#only works for int options
 OPTIMIZE_COMMAND_LINE = [
   ['-w', 'week of season', 1],
+  ['-y', 'year of season', 2015],
   ['-s', 'max similarity', 5],
   ['-i', 'iterations to run', 3]
 ]
 
 RT_YEAR = {2015:'dk',2014:'dk',2013:'fd',2012:'fd',2011:'fd'}
-CUR_YEAR = 2015
 FP_FLEX = 'ppr-flex'
 FP_QBFLEX = 'ppr-qb-flex'
 FP_QB = 'qb'

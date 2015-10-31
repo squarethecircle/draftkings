@@ -22,12 +22,12 @@ warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
 
 for opt in OPTIMIZE_COMMAND_LINE:
-    parser.add_argument(opt[0], help=opt[1], default=opt[2])
+    parser.add_argument(opt[0], help=opt[1], default=opt[2],type=int)
 
 args = parser.parse_args()
-MAX_SIMILARITY = int(args.s)
+MAX_SIMILARITY = args.s
 df = pd.read_pickle('data/histdata')
-get_score=lambda n,w:df[df['PID'] == n][df['Week']==w]['DK points']
+get_score = lambda n,y,w:df[df['PID'] == n][df['Year'] == y][df['Week'] == w]['Points']
 
 
 def check_missing_players(all_players, min_cost, e_raise):
@@ -81,27 +81,27 @@ def run_solver(solver, all_players, max_flex, chosen_dict):
     return variables, solver.Solve()
 
 
-def run(max_flex, maxed_over, remove, chosen_dict,week):
-    solver = pywraplp.Solver('FD', 
+def run(max_flex, maxed_over, remove, chosen_dict,year,week):
+    solver = pywraplp.Solver('FD',
                              pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
     all_players = []
-    if week == 0:
+    if year == CUR_YEAR and week == CUR_WEEK:
         with open('data/DKSalariesCurrent.csv', 'rb') as csvfile:
             csvdata = csv.reader(csvfile, skipinitialspace=True)
             for idx, row in enumerate(csvdata):
                 if idx > 0:
                     all_players.append(Player(row[0],generate_pid(row[1],row[0]),row[1],row[2]))
     else:
-        for i, row in df[df['Week']==week].iterrows():
-            if not np.isnan(row['DK salary']) and row['DK salary'] > 0:
-                all_players.append(Player(row['Pos'], row['PID'],row['Name'],row['DK salary']))
+        for i, row in df[df['Year'] == year][df['Week'] == week].iterrows():
+            if not np.isnan(row['Salary']) and row['Salary'] > 0:
+                all_players.append(Player(row['Pos'], row['PID'],row['Name'],row['Salary']))
     # give each a ranking
     all_players = sorted(all_players, key=lambda x: x.cost, reverse=True)
     for idx, x in enumerate(all_players):
         x.cost_ranking = idx + 1
 
-    with open('data/week%d.csv'%(week), 'rb') as csvfile:
+    with open('data/%s-Week%s.csv'%(year,week), 'rb') as csvfile:
         csvdata = csv.DictReader(csvfile)
         worked = 0
 
@@ -137,23 +137,25 @@ def run(max_flex, maxed_over, remove, chosen_dict,week):
 if __name__ == "__main__":
         #subprocess.call(['python', 'scraper.py', args.w])
     chosen_dict = {}
+    real_scores = []
     for x in xrange(0, int(args.i)):
         max_rosters, rosters, remove = [],[], []
         for max_flex in ALL_LINEUPS.iterkeys():
-            rosters.append(run(ALL_LINEUPS[max_flex], max_flex, remove,chosen_dict,int(args.w)))
+            rosters.append(run(ALL_LINEUPS[max_flex], max_flex, remove,chosen_dict,args.y,args.w))
         max_val = 0
         max_roster = None
         for roster in rosters:
             if roster.projected() > max_val:
                 max_val = roster.projected()
                 max_roster = roster
-                if int(args.w) > 0:
+                if not (args.w == CUR_WEEK and args.y == CUR_YEAR):
                     for player in max_roster.sorted_players():
-                        player.score = float(get_score(player.pid,int(args.w)))
+                        player.score = float(get_score(player.pid,args.y,args.w))
         print max_roster
-        score = 0
+        real_scores.append(max_roster.real())
         max_pids = [player.pid for player in max_roster.players]
         chosen_dict[len(chosen_dict)] = max_pids
-
+    print "Median Score: %d" % np.median(real_scores)
+    print "Standard Deviation: %d" % np.std(real_scores)
 
 
