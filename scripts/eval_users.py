@@ -6,7 +6,7 @@ import numpy as np
 import zipfile
 from constants import *
 
-#################################################################################
+##########################################################################
 # Run like this:
 #
 # python eval_users.py [DATA_FOLDER]
@@ -16,7 +16,7 @@ from constants import *
 # well as a file called 'playervals.csv' with player point values for that week.
 # player values must be formatted like "Aaron Rodgers,22.187" etc.
 #
-#################################################################################
+##########################################################################
 
 dn = sys.argv[1]
 contests_by_week = {}
@@ -25,7 +25,7 @@ for w in [w for w in os.listdir(dn) if os.path.isdir(os.path.join(dn, w))]:
     contests_by_week[w] = {}
     with open(os.path.join(dn, w, 'playervals.csv'), 'r') as re:
         pvals_by_week[w] = dict((' '.join(x[0].split('_')[:-1]), x[1]) for x in
-                map(lambda l: l.strip().split(','), re.readlines()))
+                                map(lambda l: l.strip().split(','), re.readlines()))
     for zf in [f for f in os.listdir(os.path.join(dn, w)) if 'zip' in f]:
         z = zipfile.ZipFile(os.path.join(dn, w, zf))
         for f in z.namelist():
@@ -34,7 +34,8 @@ for w in [w for w in os.listdir(dn) if os.path.isdir(os.path.join(dn, w))]:
             contest_id = f.split('.')[0].split('-')[2]
             with z.open(f) as re:
                 contests_by_week[w][contest_id] = \
-                        map(lambda l: l.strip().split(','), re.readlines()[1:])
+                    map(lambda l: l.strip().split(','), re.readlines()[1:])
+
 
 def conv_player_string(player_str):
     delim_strs = ['QB', 'RB', 'WR', 'TE', 'FLEX', 'DST']
@@ -55,7 +56,8 @@ def conv_player_string(player_str):
 
 users = {}
 for w in contests_by_week:
-    benchmark = max(contests_by_week[w].iteritems(), key=lambda x:len(x[1]))[0]
+    benchmark = max(contests_by_week[
+                    w].iteritems(), key=lambda x: len(x[1]))[0]
     maxtot = 0
     mintot = 1e12
     pvals = pvals_by_week[w]
@@ -80,14 +82,14 @@ for w in contests_by_week:
                         not_found[lineup[l]] += 1
             if allfound:
                 lis = [lineup['QB1'],
-                        lineup['RB1'],
-                        lineup['RB2'],
-                        lineup['WR1'],
-                        lineup['WR2'],
-                        lineup['WR3'],
-                        lineup['TE1'],
-                        lineup['FLEX1'],
-                        lineup['DST1']]
+                       lineup['RB1'],
+                       lineup['RB2'],
+                       lineup['WR1'],
+                       lineup['WR2'],
+                       lineup['WR3'],
+                       lineup['TE1'],
+                       lineup['FLEX1'],
+                       lineup['DST1']]
                 tot = sum(map(lambda f: float(f), lis))
                 if contest_id == benchmark:
                     if tot > maxtot:
@@ -100,17 +102,19 @@ for w in contests_by_week:
                 if username not in users_thisweek:
                     users_thisweek[username] = []
                 users_thisweek[username].append(tot)
-        #with open(os.path.join(dn, w, 'processed_{}.csv'.format(contest_id)), 'w') as wr:
+        # with open(os.path.join(dn, w, 'processed_{}.csv'.format(contest_id)), 'w') as wr:
         #    wr.writelines(outputs)
     rg = maxtot - mintot
     for n in not_found:
         print n, not_found[n]
     for username in users_thisweek:
         if username not in users:
-            users[username]=[]
-        users[username] += map(lambda s: 1.-(maxtot-s)/rg, users_thisweek[username])
+            users[username] = []
+        users[username] += map(lambda s: 1. - (maxtot - s) /
+                               rg, users_thisweek[username])
 
 with open(os.path.join(dn, 'users.csv'), 'w') as wr:
     for username in users:
         scores = np.asarray(users[username])
-        wr.write('{},{},{},{}\n'.format(username, scores.size, np.median(scores), scores.std()))
+        wr.write('{},{},{},{}\n'.format(
+            username, scores.size, np.median(scores), scores.std()))

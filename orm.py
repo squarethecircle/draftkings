@@ -1,6 +1,7 @@
 
 from constants import ALL_POS_TEAM
 
+
 class Roster:
     POSITION_ORDER = {
         "QB": 0,
@@ -38,7 +39,9 @@ class Roster:
         s += "\nReal Score: %d\n" % self.real()
         return s
 
+
 class Player:
+
     def __init__(self, pos, pid, name, cost, proj=0, marked=None):
         self.pos = pos
         self.name = name
@@ -50,16 +53,18 @@ class Player:
         self.score = 0
 
     def player_report(self):
-        print self.pos + ' '+ self.name + \
-        ' (' + str(self.cost) + ')' + ' (' + str(self.proj) + ')'
+        print self.pos + ' ' + self.name + \
+            ' (' + str(self.cost) + ')' + ' (' + str(self.proj) + ')'
 
     def __repr__(self):
-        return "[{0: <2}] {1: <20}(${2}, {3}, {4})".format(self.pos, \
-                                    self.name, \
-                                    self.cost, \
-                                    self.proj, self.score)
+        return "[{0: <2}] {1: <20}(${2}, {3}, {4})".format(self.pos,
+                                                           self.name,
+                                                           self.cost,
+                                                           self.proj, self.score)
+
 
 class Team:
+
     def __init__(self, give):
         self._set_team_pos(give)
         self.team_cost = self._get_team_prop('cost')
@@ -78,7 +83,7 @@ class Team:
             name = getattr(self, pos).name
             players.append(name)
 
-        return len(players) != len(set(players))  
+        return len(players) != len(set(players))
 
     def _set_team_pos(self, give):
         for idx, val in enumerate(give):
