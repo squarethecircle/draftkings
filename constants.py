@@ -43,6 +43,8 @@ OPTIMIZE_COMMAND_LINE = [
   ['-i', 'iterations to run', 3]
 ]
 
+RT_YEAR = {2015:'dk',2014:'dk',2013:'fd',2012:'fd',2011:'fd'}
+CUR_YEAR = 2015
 FP_FLEX = 'ppr-flex'
 FP_QBFLEX = 'ppr-qb-flex'
 FP_QB = 'qb'
