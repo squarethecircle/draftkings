@@ -1,3 +1,4 @@
 *.pyc
 ortools
+*.DS_Store
 data
