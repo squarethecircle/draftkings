@@ -6,6 +6,7 @@ import csv
 from sklearn import neighbors
 from sklearn.metrics import r2_score
 
+CHANGE_RANK = 60
 
 def calc_dan_model(hf, pos):
     ranks = hf[hf['Pos'] == pos]['Avg Rank']
@@ -27,8 +28,8 @@ def calc_dan_model(hf, pos):
 
 
 def calc_new_model(hf, pos):
-    ranks = hf[hf['Points'] > 0][hf['Pos'] == pos]['Avg Rank']
-    scores = hf[hf['Points'] > 0][hf['Pos'] == pos]['Points']
+    ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] < CHANGE_RANK]['Avg Rank']
+    scores = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] < CHANGE_RANK]['Points']
     if pos in PROJECTION_TYPE[FP_QB] or pos in PROJECTION_TYPE[FP_DST]:
         crazy_fit = np.poly1d(np.polyfit(ranks, scores, 5))
         print "r2 score is %f" % (r2_score(scores, map(crazy_fit, ranks)))
@@ -55,7 +56,16 @@ def write_week(players, regressions, year, week):
         projwriter = csv.writer(csvfile, delimiter=',')
         projwriter.writerow(['playername', 'points'])
         for i, player in players.iterrows():
-            player_projected = regressions[player['Pos']](player['Avg Rank'])
+            if player['Avg Rank'] > CHANGE_RANK:
+                if player['# Games'] > 1:
+                    if regressions[player['Pos']](player['Avg Rank']) > player['PPG']:
+                        player_projected = player['PPG']
+                    else:
+                        player_projected = regressions[player['Pos']](player['Avg Rank'])
+                else:
+                    player_projected = 0
+            else:
+                player_projected = regressions[player['Pos']](player['Avg Rank'])
             projwriter.writerow([player['PID'], player_projected])
 
 if __name__ == '__main__':

@@ -25,7 +25,7 @@ for opt in OPTIMIZE_COMMAND_LINE:
     parser.add_argument(opt[0], help=opt[1], default=opt[2], type=int)
 
 args = parser.parse_args()
-MAX_SIMILARITY = args.s
+
 df = pd.read_pickle('data/histdata')
 get_score = lambda n, y, w: df[df['PID'] == n][
     df['Year'] == y][df['Week'] == w]['Points']
@@ -49,7 +49,7 @@ def check_missing_players(all_players, min_cost, e_raise):
         raise Exception('Total missing players at price point: ' + str(miss))
 
 
-def run_solver(solver, all_players, max_flex, chosen_dict):
+def run_solver(solver, all_players, max_flex, chosen_dict, max_similarity):
     '''
     handle or-tools logic
     '''
@@ -68,7 +68,7 @@ def run_solver(solver, all_players, max_flex, chosen_dict):
 
     was_chosen = lambda r, p: int(r in chosen_dict and p in chosen_dict[r])
     for lineup_num in range(len(chosen_dict)):
-        diversity_criterion = solver.Constraint(0, MAX_SIMILARITY)
+        diversity_criterion = solver.Constraint(0, max_similarity)
         for i, player in enumerate(all_players):
             res = was_chosen(lineup_num, player.pid)
             diversity_criterion.SetCoefficient(variables[i], res)
@@ -82,7 +82,7 @@ def run_solver(solver, all_players, max_flex, chosen_dict):
     return variables, solver.Solve()
 
 
-def run(max_flex, maxed_over, remove, chosen_dict, year, week):
+def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity):
     solver = pywraplp.Solver('FD',
                              pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
@@ -111,7 +111,10 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week):
         for row in csvdata:
             player = filter(lambda x: x.pid in row['playername'], all_players)
             try:
-                player[0].proj = float(row['points'])
+                if float(row['points']) > 5:
+                    player[0].proj = float(row['points'])
+                else:
+                    player[0].proj = float(0)
                 player[0].marked = 'Y'
             except:
                 pass
@@ -122,7 +125,7 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week):
     all_players = filter(lambda x: x.pid not in remove, all_players)
 
     variables, solution = run_solver(
-        solver, all_players, max_flex, chosen_dict)
+        solver, all_players, max_flex, chosen_dict, max_similarity)
 
     if solution == solver.OPTIMAL:
         roster = Roster()
@@ -138,28 +141,37 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week):
         raise Exception('No solution error')
 
 
-if __name__ == "__main__":
-        #subprocess.call(['python', 'scraper.py', args.w])
+def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity = args.s, print_terminal = True):
+        #subprocess.call(['python', 'scraper.py', week])
     chosen_dict = {}
     real_scores = []
-    for x in xrange(0, int(args.i)):
+    for x in xrange(0, int(iterations)):
         max_rosters, rosters, remove = [], [], []
         for max_flex in ALL_LINEUPS.iterkeys():
             rosters.append(
-                run(ALL_LINEUPS[max_flex], max_flex, remove, chosen_dict, args.y, args.w))
+                run(ALL_LINEUPS[max_flex], max_flex, remove, chosen_dict, year, week, max_similarity))
         max_val = 0
         max_roster = None
         for roster in rosters:
             if roster.projected() > max_val:
                 max_val = roster.projected()
                 max_roster = roster
-                if not (args.w == CUR_WEEK and args.y == CUR_YEAR):
+                if not (week == CUR_WEEK and year == CUR_YEAR):
                     for player in max_roster.sorted_players():
                         player.score = float(
-                            get_score(player.pid, args.y, args.w))
-        print max_roster
+                            get_score(player.pid, year, week))
+        if print_terminal:
+            print max_roster
         real_scores.append(max_roster.real())
         max_pids = [player.pid for player in max_roster.players]
         chosen_dict[len(chosen_dict)] = max_pids
-    print "Median Score: %d" % np.median(real_scores)
-    print "Standard Deviation: %d" % np.std(real_scores)
+    median_score = np.median(real_scores)
+    std_dev = np.std(real_scores)
+    if print_terminal:
+        print "Median Score: %d" % median_score
+        print "Standard Deviation: %d" % std_dev
+
+    return (median_score, std_dev)
+
+if __name__ == "__main__":
+    optimize()
