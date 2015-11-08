@@ -196,7 +196,6 @@ if __name__ == '__main__':
     final_frame = pd.concat([hist_frame, cur_frame], ignore_index=True).drop_duplicates(
         ['PID', 'Year', 'Week'], keep='last')
     final_frame = calc_ppg(final_frame)
-    final_frame['Variance'] = final_frame.groupby(['PID'])['Points'].var() / (final_frame.groupby(['PID'])['Points'].mean() ** 2)
 
     cur_frame.to_pickle('data/curprojs')
     final_frame.to_pickle('data/histdata')

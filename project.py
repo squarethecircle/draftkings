@@ -5,7 +5,7 @@ import numpy as np
 import csv
 from sklearn import neighbors
 from sklearn.metrics import r2_score
-
+variance = None 
 CHANGE_RANK = {FP_DST: 6, FP_QB: 30, FP_FLEX:40}
 POS_DB = {'DST':FP_DST,'QB':FP_QB,'RB':FP_FLEX,'TE':FP_FLEX,'WR':FP_FLEX}
 
@@ -101,9 +101,9 @@ WEIGHT = 0.75
 def get_adjusted_score(player, regression):
     player_projected = regression(player['Avg Rank'])
     if player['# Games'] > 1:
-        return player_projected * WEIGHT + player['D_PPG'] * (1 - WEIGHT) - player['Variance']
+        return player_projected * WEIGHT + player['D_PPG'] * (1 - WEIGHT) - variance[player['PID']]
     else:
-        return player_projected
+        return player_projected - variance[player['PID']]
 
 def write_week(players, regressions, year, week):
     with open('data/%s-Week%s.csv' % (year, week), 'wb') as csvfile:
@@ -129,6 +129,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     hist_frame = pd.read_pickle('data/histdata')
     cur_frame = pd.read_pickle('data/curprojs')
+    global variance
+    variance = hist_frame.groupby(['PID'])['Points'].var() / (hist_frame.groupby(['PID'])['Points'].mean() ** 2)
     for year in range(2014,CUR_YEAR + 1):
         max_week = max(hist_frame[hist_frame['Year'] == year]['Week'])
         for week in range(1, max_week + 1):
