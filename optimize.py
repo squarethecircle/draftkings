@@ -137,6 +137,9 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week):
     else:
         raise Exception('No solution error')
 
+def outputstr(roster):
+    return ','.join(map(lambda p: generate_pid(p.name, p.pos), roster.players))
+
 
 if __name__ == "__main__":
         #subprocess.call(['python', 'scraper.py', args.w])
@@ -157,9 +160,9 @@ if __name__ == "__main__":
                     for player in max_roster.sorted_players():
                         player.score = float(
                             get_score(player.pid, args.y, args.w))
-        print max_roster
+        print outputstr(max_roster)
         real_scores.append(max_roster.real())
         max_pids = [player.pid for player in max_roster.players]
         chosen_dict[len(chosen_dict)] = max_pids
-    print "Median Score: %d" % np.median(real_scores)
-    print "Standard Deviation: %d" % np.std(real_scores)
+    #print "Median Score: %d" % np.median(real_scores)
+    #print "Standard Deviation: %d" % np.std(real_scores)
