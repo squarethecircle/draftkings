@@ -142,7 +142,6 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity):
 
 
 def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity = args.s, print_terminal = True):
-        #subprocess.call(['python', 'scraper.py', week])
     chosen_dict = {}
     real_scores = []
     for x in xrange(0, int(iterations)):

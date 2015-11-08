@@ -6,11 +6,25 @@ import csv
 from sklearn import neighbors
 from sklearn.metrics import r2_score
 
-CHANGE_RANK = 60
+CHANGE_RANK = {FP_DST: 6, FP_QB: 30, FP_FLEX:40}
+POS_DB = {'DST':FP_DST,'QB':FP_QB,'RB':FP_FLEX,'TE':FP_FLEX,'WR':FP_FLEX}
 
 def calc_dan_model(hf, pos):
-    ranks = hf[hf['Pos'] == pos]['Avg Rank']
-    scores = hf[hf['Pos'] == pos]['Points']
+    if pos in PROJECTION_TYPE[FP_QB]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                       CHANGE_RANK[FP_QB]]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                        CHANGE_RANK[FP_QB]]['Points']
+    if pos in PROJECTION_TYPE[FP_DST]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                       CHANGE_RANK[FP_DST]]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                        CHANGE_RANK[FP_DST]]['Points']
+    elif pos in PROJECTION_TYPE[FP_FLEX]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                       CHANGE_RANK[FP_FLEX]]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                        CHANGE_RANK[FP_FLEX]]['Points']
     if pos in PROJECTION_TYPE[FP_QB] or pos in PROJECTION_TYPE[FP_DST]:
         linear_fit = np.poly1d(np.polyfit(ranks, scores, 1))
         quadratic_fit = np.poly1d(np.polyfit(ranks, scores, 2))
@@ -28,13 +42,27 @@ def calc_dan_model(hf, pos):
 
 
 def calc_new_model(hf, pos):
-    ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] < CHANGE_RANK]['Avg Rank']
-    scores = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] < CHANGE_RANK]['Points']
-    if pos in PROJECTION_TYPE[FP_QB] or pos in PROJECTION_TYPE[FP_DST]:
+    if pos in PROJECTION_TYPE[FP_QB]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                       CHANGE_RANK[FP_QB]]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                        CHANGE_RANK[FP_QB]]['Points']
+        crazy_fit = np.poly1d(np.polyfit(ranks, scores, 5))
+        print "r2 score is %f" % (r2_score(scores, map(crazy_fit, ranks)))
+        return crazy_fit
+    if pos in PROJECTION_TYPE[FP_DST]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                       CHANGE_RANK[FP_DST]]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                        CHANGE_RANK[FP_DST]]['Points']
         crazy_fit = np.poly1d(np.polyfit(ranks, scores, 5))
         print "r2 score is %f" % (r2_score(scores, map(crazy_fit, ranks)))
         return crazy_fit
     elif pos in PROJECTION_TYPE[FP_FLEX]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                       CHANGE_RANK[FP_FLEX]]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
+                                                        CHANGE_RANK[FP_FLEX]]['Points']
         crazy_fit = np.poly1d(np.polyfit(ranks, scores, 5))
         print "r2 score is %f" % (r2_score(scores, map(crazy_fit, ranks)))
         return crazy_fit
@@ -56,7 +84,7 @@ def write_week(players, regressions, year, week):
         projwriter = csv.writer(csvfile, delimiter=',')
         projwriter.writerow(['playername', 'points'])
         for i, player in players.iterrows():
-            if player['Avg Rank'] > CHANGE_RANK:
+            if player['Avg Rank'] > CHANGE_RANK[POS_DB[player['Pos']]]:
                 if player['# Games'] > 1:
                     if regressions[player['Pos']](player['Avg Rank']) > player['PPG']:
                         player_projected = player['PPG']
@@ -73,7 +101,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     hist_frame = pd.read_pickle('data/histdata')
     cur_frame = pd.read_pickle('data/curprojs')
-    for year in range(2011, CUR_YEAR + 1):
+    for year in range(2014,CUR_YEAR + 1):
         max_week = max(hist_frame[hist_frame['Year'] == year]['Week'])
         for week in range(1, max_week + 1):
             if week == 1 and year == 2011:
