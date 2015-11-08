@@ -25,10 +25,11 @@ def set_first_zero(arr):
     arr[0] = 0
     return arr
 
-
+DISCOUNT_RATE = 0.2
 def calc_ppg(final_frame):
     sort_frame = final_frame.sort_values(['PID', 'Year', 'Week'])
     sort_frame['Total Points'] = 0
+    sort_frame['Total Discounted Points'] = 0
     sort_frame['# Games'] = 0
     last_pid = None
     last_year = None
@@ -37,13 +38,17 @@ def calc_ppg(final_frame):
     for index, row in sort_frame.iterrows():
         if row['PID'] == last_pid and row['Year'] == last_year:
             sort_frame.loc[index, 'Total Points'] = last_pts
+            sort_frame.loc[index, 'Total Discounted Points'] = discounted_points
             sort_frame.loc[index, '# Games'] = last_games + 1
         last_pid = sort_frame.loc[index, 'PID']
         last_year = sort_frame.loc[index, 'Year']
         last_pts = sort_frame.loc[
             index, 'Total Points'] + sort_frame.loc[index, 'Points']
+        discounted_points = sort_frame.loc[
+            index, 'Total Discounted Points'] * DISCOUNT_RATE + sort_frame.loc[index, 'Points']
         last_games = sort_frame.loc[index, '# Games']
     sort_frame['PPG'] = sort_frame['Total Points'] / sort_frame['# Games']
+    sort_frame['D_PPG'] = sort_frame['Total Discounted Points'] / (((1-(DISCOUNT_RATE**sort_frame['# Games']))/(1-DISCOUNT_RATE)))
     return sort_frame
 
 
@@ -191,6 +196,7 @@ if __name__ == '__main__':
     final_frame = pd.concat([hist_frame, cur_frame], ignore_index=True).drop_duplicates(
         ['PID', 'Year', 'Week'], keep='last')
     final_frame = calc_ppg(final_frame)
+    final_frame['Variance'] = final_frame.groupby(['PID'])['Points'].var() / (final_frame.groupby(['PID'])['Points'].mean() ** 2)
 
     cur_frame.to_pickle('data/curprojs')
     final_frame.to_pickle('data/histdata')

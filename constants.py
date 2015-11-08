@@ -1,4 +1,4 @@
-CUR_WEEK = 8
+CUR_WEEK = 9
 CUR_YEAR = 2015
 FFPRO = 'http://www.fantasypros.com/nfl/projections/'
 
@@ -43,8 +43,8 @@ ALL_LINEUPS = {
 OPTIMIZE_COMMAND_LINE = [
     ['-w', 'week of season', 1],
     ['-y', 'year of season', 2015],
-    ['-s', 'max similarity', 5],
-    ['-i', 'iterations to run', 3]
+    ['-s', 'max similarity', 7],
+    ['-i', 'iterations to run', 10]
 ]
 
 RT_YEAR = {2015: 'dk', 2014: 'dk', 2013: 'fd', 2012: 'fd', 2011: 'fd'}

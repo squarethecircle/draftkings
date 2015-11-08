@@ -67,6 +67,25 @@ def calc_new_model(hf, pos):
         print "r2 score is %f" % (r2_score(scores, map(crazy_fit, ranks)))
         return crazy_fit
 
+def calc_new_2model(hf, pos):
+    if pos in PROJECTION_TYPE[FP_QB]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos]['Points']
+        crazy_fit = np.poly1d(np.polyfit(ranks, scores, 5))
+        print "r2 score is %f" % (r2_score(scores, map(crazy_fit, ranks)))
+        return crazy_fit
+    if pos in PROJECTION_TYPE[FP_DST]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos]['Points']
+        crazy_fit = np.poly1d(np.polyfit(ranks, scores, 5))
+        print "r2 score is %f" % (r2_score(scores, map(crazy_fit, ranks)))
+        return crazy_fit
+    elif pos in PROJECTION_TYPE[FP_FLEX]:
+        ranks = hf[hf['Points'] > 0][hf['Pos'] == pos]['Avg Rank']
+        scores = hf[hf['Points'] > 0][hf['Pos'] == pos]['Points']
+        crazy_fit = np.poly1d(np.polyfit(ranks, scores, 5))
+        print "r2 score is %f" % (r2_score(scores, map(crazy_fit, ranks)))
+        return crazy_fit
 
 def calc_knn_model(hf, pos):
     ranks = hf[hf['Pos'] == pos]['Avg Rank']
@@ -78,6 +97,13 @@ def calc_knn_model(hf, pos):
     print "r2 score is %f" % (r2_score(scores, map(ret_func, ranks)))
     return ret_func
 
+WEIGHT = 0.75
+def get_adjusted_score(player, regression):
+    player_projected = regression(player['Avg Rank'])
+    if player['# Games'] > 1:
+        return player_projected * WEIGHT + player['D_PPG'] * (1 - WEIGHT) - player['Variance']
+    else:
+        return player_projected
 
 def write_week(players, regressions, year, week):
     with open('data/%s-Week%s.csv' % (year, week), 'wb') as csvfile:
@@ -86,14 +112,16 @@ def write_week(players, regressions, year, week):
         for i, player in players.iterrows():
             if player['Avg Rank'] > CHANGE_RANK[POS_DB[player['Pos']]]:
                 if player['# Games'] > 1:
-                    if regressions[player['Pos']](player['Avg Rank']) > player['PPG']:
-                        player_projected = player['PPG']
+                    if regressions[player['Pos']](player['Avg Rank']) > player['D_PPG']:
+                        player_projected = player['D_PPG'] - player['Variance']
                     else:
-                        player_projected = regressions[player['Pos']](player['Avg Rank'])
+                        player_projected = get_adjusted_score(player, regressions[player['Pos']])
+
                 else:
                     player_projected = 0
             else:
-                player_projected = regressions[player['Pos']](player['Avg Rank'])
+                player_projected = get_adjusted_score(player, regressions[player['Pos']])
+
             projwriter.writerow([player['PID'], player_projected])
 
 if __name__ == '__main__':
