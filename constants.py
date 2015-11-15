@@ -1,4 +1,4 @@
-CUR_WEEK = 9
+CUR_WEEK = 10
 CUR_YEAR = 2015
 FFPRO = 'http://www.fantasypros.com/nfl/projections/'
 

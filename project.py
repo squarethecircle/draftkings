@@ -100,28 +100,24 @@ def calc_knn_model(hf, pos):
 WEIGHT = 0.75
 def get_adjusted_score(player, regression):
     player_projected = regression(player['Avg Rank'])
+    cur_variance = np.sqrt(variance[player['PID']])
     if player['# Games'] > 1:
-        return player_projected * WEIGHT + player['D_PPG'] * (1 - WEIGHT) - variance[player['PID']]
+        if player['Avg Rank'] > CHANGE_RANK[POS_DB[player['Pos']]]:
+            if regression(player['Avg Rank']) > player['D_PPG']:
+                return player['D_PPG'] - cur_variance
+        return player_projected * WEIGHT + player['D_PPG'] * (1 - WEIGHT) - cur_variance
     else:
-        return player_projected - variance[player['PID']]
+        if player['Avg Rank'] > CHANGE_RANK[POS_DB[player['Pos']]]:
+            return 0
+        else:
+            return player_projected - cur_variance
 
 def write_week(players, regressions, year, week):
     with open('data/%s-Week%s.csv' % (year, week), 'wb') as csvfile:
         projwriter = csv.writer(csvfile, delimiter=',')
         projwriter.writerow(['playername', 'points'])
         for i, player in players.iterrows():
-            if player['Avg Rank'] > CHANGE_RANK[POS_DB[player['Pos']]]:
-                if player['# Games'] > 1:
-                    if regressions[player['Pos']](player['Avg Rank']) > player['D_PPG']:
-                        player_projected = player['D_PPG'] - player['Variance']
-                    else:
-                        player_projected = get_adjusted_score(player, regressions[player['Pos']])
-
-                else:
-                    player_projected = 0
-            else:
-                player_projected = get_adjusted_score(player, regressions[player['Pos']])
-
+            player_projected = get_adjusted_score(player, regressions[player['Pos']])
             projwriter.writerow([player['PID'], player_projected])
 
 if __name__ == '__main__':
