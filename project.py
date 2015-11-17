@@ -103,7 +103,7 @@ def get_adjusted_score(player, regression):
     cur_variance = np.sqrt(variance[player['PID']])
     if player['# Games'] > 1:
         if player['Avg Rank'] > CHANGE_RANK[POS_DB[player['Pos']]]:
-            if regression(player['Avg Rank']) > player['D_PPG']:
+            if player_projected > player['D_PPG']:
                 return player['D_PPG'] - cur_variance
         return player_projected * WEIGHT + player['D_PPG'] * (1 - WEIGHT) - cur_variance
     else:
