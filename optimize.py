@@ -170,7 +170,7 @@ def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity =
         print "Median Score: %d" % median_score
         print "Standard Deviation: %d" % std_dev
 
-    return (median_score, std_dev)
+    return (median_score, std_dev, real_scores)
 
 if __name__ == "__main__":
     optimize()

@@ -1,4 +1,4 @@
-CUR_WEEK = 10
+CUR_WEEK = 11
 CUR_YEAR = 2015
 FFPRO = 'http://www.fantasypros.com/nfl/projections/'
 
@@ -79,6 +79,16 @@ FANPROS_DST_NAMES = {'Detroit Lions': 'Lions', 'New York Giants': 'Giants', 'New
                      'San Diego Chargers': 'Chargers', 'Miami Dolphins': 'Dolphins', 'Baltimore Ravens': 'Ravens',
                      'Houston Texans': 'Texans', 'Dallas Cowboys': 'Cowboys', 'St. Louis Rams': 'Rams',
                      'Atlanta Falcons': 'Falcons', 'Cleveland Browns': 'Browns'}
+
+
+WINNING_CUTOFFS = {
+  10: 121,
+  9: 173, 
+  8: 147,
+  7: 167,
+
+}
+
 
 # standardizing names in this way matches 2-4 more people per week
 # in the dataset that otherwise would be key mismatches
