@@ -8,12 +8,14 @@ import matplotlib.pyplot as plt
 from optimize import pd, df
 from constants import *
 
-### only works for week 10
+year, week = 2015, 10
 
 ALL_POS = ['QB', 'RB', 'WR', 'TE', 'DST', 'FLEX']
-path_to_data = 'data/10/'
+path_to_data = 'data/%d/' % week
 
 num_lineups = 0
+
+
 
 player_count = {}
 files = [ f for f in listdir(path_to_data) if isfile(join(path_to_data,f)) ]
@@ -45,30 +47,45 @@ name_translation['Corey Brown'] = 'Philly Brown'
 ### ppg / salary
 p_s_ratio = []
 
+pid_or = {}
 for k,v in OR_dict.items():
 	if k in name_translation:
 		OR_dict[name_translation[k]] = v
 		del OR_dict[k]
 		k = name_translation[k]
 
-	r = df[df['Year']==2015][df['Week']==10][df['Name']==k]
+	r = df[df['Year']==year][df['Week']==week][df['Name']==k]
 	if len(r) == 0:
 		del OR_dict[k]
 	else:
-		prs = r.iloc[0]['D_PPG'] / r.iloc[0]['Salary'] * 100
-		if np.isnan(prs):
-			del OR_dict[k]
-		else:
-			p_s_ratio.append((k, prs))
+		pid = r.iloc[0]['PID']
+		pid_or[pid] = v
 
-ORs = [p[1] for p in sorted(OR_dict.items(), key=lambda x: x[0])]
-PRS = [p[1] for p in sorted(p_s_ratio, key=lambda x: x[0])]
+pid_proj = {}
+with open('data/%d-Week%d.csv' % (year, week), 'rb') as csvfile:
+    csvdata = csv.DictReader(csvfile)
+    for row in csvdata:
+    	if row['playername'] in pid_or:
+    		points = float(row['points'])
+    		if points > 0:
+    			r = df[df['Year']==year][df['Week']==week][df['PID']==row['playername']]
+    			salary = r.iloc[0]['Salary']
+    			pid_proj[row['playername']] = points / salary
+    		else:
+    			del pid_or[row['playername']]
 
+
+
+ORs = [p[1] for p in sorted(pid_or.items(), key=lambda x: x[0])]
+PROJs = [p[1] for p in sorted(pid_proj.items(), key=lambda x: x[0])]
+
+print ORs
+print PROJs
 
 
 # print PRS
-fit = np.poly1d(np.polyfit(PRS, ORs, 1))
+fit = np.poly1d(np.polyfit(PROJs, ORs, 1))
 
-plt.plot(PRS, ORs, '.')
-plt.plot(PRS, fit(PRS), '-')
+plt.plot(PROJs, ORs, '.')
+plt.plot(PROJs, fit(PROJs), '-')
 plt.show()

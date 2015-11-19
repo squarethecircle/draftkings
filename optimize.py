@@ -49,14 +49,20 @@ def check_missing_players(all_players, min_cost, e_raise):
         raise Exception('Total missing players at price point: ' + str(miss))
 
 
-def run_solver(solver, all_players, max_flex, chosen_dict, max_similarity):
+def run_solver(solver, all_players, max_flex, chosen_dict, max_similarity, exposure, max_exposure):
     '''
     handle or-tools logic
     '''
     variables = []
 
+    # ineligible list of players, hit max exposure
+    ineligible = set(filter(lambda x: x.pid in exposure and exposure[x.pid][1] >= max_exposure, all_players))
+
     for player in all_players:
-        variables.append(solver.IntVar(0, 1, player.pid))
+        if player in ineligible:
+            variables.append(solver.IntVar(0, 0, player.pid))
+        else:
+            variables.append(solver.IntVar(0, 1, player.pid))
 
     objective = solver.Objective()
     objective.SetMaximization()
@@ -67,6 +73,7 @@ def run_solver(solver, all_players, max_flex, chosen_dict, max_similarity):
         salary_cap.SetCoefficient(variables[i], player.cost)
 
     was_chosen = lambda r, p: int(r in chosen_dict and p in chosen_dict[r])
+
     for lineup_num in range(len(chosen_dict)):
         diversity_criterion = solver.Constraint(0, max_similarity)
         for i, player in enumerate(all_players):
@@ -82,7 +89,7 @@ def run_solver(solver, all_players, max_flex, chosen_dict, max_similarity):
     return variables, solver.Solve()
 
 
-def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity):
+def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity, exposure, max_exposure):
     solver = pywraplp.Solver('FD',
                              pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
@@ -125,7 +132,7 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity):
     all_players = filter(lambda x: x.pid not in remove, all_players)
 
     variables, solution = run_solver(
-        solver, all_players, max_flex, chosen_dict, max_similarity)
+        solver, all_players, max_flex, chosen_dict, max_similarity, exposure, max_exposure)
 
     if solution == solver.OPTIMAL:
         roster = Roster()
@@ -140,15 +147,30 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity):
     else:
         raise Exception('No solution error')
 
+def update_exposure(exposure, roster):
+    for p in roster.players:
+        if p.pid in exposure:
+            exposure[p.pid][0] += 1
+            exposure[p.pid][1] += p.proj
+        else:
+            exposure[p.pid] = [1, p.proj]
 
-def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity = args.s, print_terminal = True):
+def print_exposure(exposure):
+    print '===='
+    for p in sorted(exposure.items(), key=lambda x: x[1], reverse=True):
+        print "{0: <20}({1} picks, {2} score)".format(p[0], str(p[1][0]), str(p[1][1]))
+
+def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity = args.s, \
+                max_exposure = args.e, print_terminal = True):
     chosen_dict = {}
+    exposure = {} ## key: pid, val = [num picks, total proj_score]
     real_scores = []
     for x in xrange(0, int(iterations)):
         max_rosters, rosters, remove = [], [], []
         for max_flex in ALL_LINEUPS.iterkeys():
             rosters.append(
-                run(ALL_LINEUPS[max_flex], max_flex, remove, chosen_dict, year, week, max_similarity))
+                run(ALL_LINEUPS[max_flex], max_flex, remove, chosen_dict, year, week, max_similarity,\
+                     exposure, max_exposure * iterations))
         max_val = 0
         max_roster = None
         for roster in rosters:
@@ -161,14 +183,18 @@ def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity =
                             get_score(player.pid, year, week))
         if print_terminal:
             print max_roster
+
+        update_exposure(exposure, max_roster)
         real_scores.append(max_roster.real())
         max_pids = [player.pid for player in max_roster.players]
         chosen_dict[len(chosen_dict)] = max_pids
+
     median_score = np.median(real_scores)
     std_dev = np.std(real_scores)
     if print_terminal:
         print "Median Score: %d" % median_score
         print "Standard Deviation: %d" % std_dev
+        print_exposure(exposure)
 
     return (median_score, std_dev, real_scores)
 

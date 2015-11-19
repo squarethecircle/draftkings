@@ -41,10 +41,11 @@ ALL_LINEUPS = {
 
 # only works for int options
 OPTIMIZE_COMMAND_LINE = [
-    ['-w', 'week of season', 1],
-    ['-y', 'year of season', 2015],
+    ['-w', 'week of season', CUR_WEEK],
+    ['-y', 'year of season', CUR_YEAR],
     ['-s', 'max similarity', 7],
-    ['-i', 'iterations to run', 15]
+    ['-i', 'iterations to run', 15],
+    ['-e', 'exposure to player - max avg points per game', 14]
 ]
 
 RT_YEAR = {2015: 'dk', 2014: 'dk', 2013: 'fd', 2012: 'fd', 2011: 'fd'}
