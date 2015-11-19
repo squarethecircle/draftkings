@@ -1,7 +1,7 @@
 from optimize import *
 
 year = 2015
-numweeks = 10
+numweeks = CUR_WEEK - 1
 max_similarity = 7
 iterations = 15
 
