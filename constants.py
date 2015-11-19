@@ -44,7 +44,7 @@ OPTIMIZE_COMMAND_LINE = [
     ['-w', 'week of season', 1],
     ['-y', 'year of season', 2015],
     ['-s', 'max similarity', 7],
-    ['-i', 'iterations to run', 10]
+    ['-i', 'iterations to run', 15]
 ]
 
 RT_YEAR = {2015: 'dk', 2014: 'dk', 2013: 'fd', 2012: 'fd', 2011: 'fd'}
