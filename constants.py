@@ -1,4 +1,4 @@
-CUR_WEEK = 11
+CUR_WEEK = 12
 CUR_YEAR = 2015
 FFPRO = 'http://www.fantasypros.com/nfl/projections/'
 
@@ -83,11 +83,11 @@ FANPROS_DST_NAMES = {'Detroit Lions': 'Lions', 'New York Giants': 'Giants', 'New
 
 
 WINNING_CUTOFFS = {
+  11: 105,
   10: 121,
   9: 173, 
   8: 147,
   7: 167,
-
 }
 
 

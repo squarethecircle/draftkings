@@ -1,11 +1,11 @@
+import csv, argparse
 import pandas as pd
-from constants import *
-import argparse
 import numpy as np
-import csv
 from sklearn import neighbors
 from sklearn.metrics import r2_score
-variance = None 
+
+from constants import *
+
 CHANGE_RANK = {FP_DST: 6, FP_QB: 30, FP_FLEX:40}
 POS_DB = {'DST':FP_DST,'QB':FP_QB,'RB':FP_FLEX,'TE':FP_FLEX,'WR':FP_FLEX}
 
@@ -100,7 +100,7 @@ def calc_knn_model(hf, pos):
 WEIGHT = 0.75
 def get_adjusted_score(player, regression):
     player_projected = regression(player['Avg Rank'])
-    cur_variance = np.sqrt(variance[player['PID']])
+    cur_variance = np.sqrt(player['Variance'])
     if player['# Games'] > 1:
         if player['Avg Rank'] > CHANGE_RANK[POS_DB[player['Pos']]]:
             if player_projected > player['D_PPG']:
@@ -125,8 +125,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
     hist_frame = pd.read_pickle('data/histdata')
     cur_frame = pd.read_pickle('data/curprojs')
-    global variance
-    variance = hist_frame.groupby(['PID'])['Points'].var() / (hist_frame.groupby(['PID'])['Points'].mean() ** 2)
+
+    variance = pd.DataFrame(hist_frame.groupby(['PID'])['Points'].var() / (hist_frame.groupby(['PID'])['Points'].mean() ** 2))
+    variance.insert(0, 'PID', variance.index)
+    variance.columns = ['PID', 'Variance']
+
+    hist_frame = pd.merge(left=hist_frame, right=variance, on='PID')
+
     for year in range(2014,CUR_YEAR + 1):
         max_week = max(hist_frame[hist_frame['Year'] == year]['Week'])
         for week in range(1, max_week + 1):

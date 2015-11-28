@@ -17,7 +17,7 @@ import warnings
 import csv
 
 warnings.filterwarnings("ignore")
-
+pd.set_option('display.width', 400)
 
 parser = argparse.ArgumentParser()
 

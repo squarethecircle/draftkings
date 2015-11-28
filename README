@@ -1,0 +1,39 @@
+Algorithm Tweaks
+
+Variables (need to test)
+
+CHANGE_RANK
+WEIGHT
+D_PPG Discount Rate
+
+
+
+===
+Weighted Sum of D_PPG and projection
+
+if player's rank is below threshold and projection higher than D_PPG, use D_PPG
+otherwise use the weighted sum of D_PPG and projection
+
+if no PPG, use projection
+
+project.py | get_adjusted_score()
+
+===
+Variance penalty
+
+subtract normalized variance from projected score
+
+project.py | get_adjusted_score()
+
+===
+Limit exposure to player
+
+-e flag is the maximum allowed number of points per game for player
+ie -e is 14 and -i is 15, each player is only allowed to score 14 * 15 = 210 points in total. 
+ie if player picked 10 times, the projected score must be below 210 / 10 = 21
+
+default set to 14
+
+optimize.py | max_exposure
+
+===
