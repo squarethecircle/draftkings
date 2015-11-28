@@ -30,25 +30,6 @@ df = pd.read_pickle('data/histdata')
 get_score = lambda n, y, w: df[df['PID'] == n][
     df['Year'] == y][df['Week'] == w]['Points']
 
-
-def check_missing_players(all_players, min_cost, e_raise):
-    '''
-    check for significant missing players
-    as names from different data do not match up
-    continues or stops based on inputs
-    '''
-    contained_report = len(filter(lambda x: x.marked == 'Y', all_players))
-    total_report = len(all_players)
-
-    miss = len(filter(lambda x: x.marked != 'Y' and x.cost > min_cost,
-                      all_players))
-
-    if e_raise < miss:
-        print 'Got {0} out of {1} total'.format(str(contained_report),
-                                                str(total_report))
-        raise Exception('Total missing players at price point: ' + str(miss))
-
-
 def run_solver(solver, all_players, max_flex, chosen_dict, max_similarity, exposure, max_exposure):
     '''
     handle or-tools logic
@@ -126,8 +107,6 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity, e
             except:
                 pass
 
-    #check_missing_players(all_players, args.sp, args.mp)
-
     # remove previously optimize
     all_players = filter(lambda x: x.pid not in remove, all_players)
 
@@ -167,6 +146,9 @@ def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity =
     real_scores = []
     for x in xrange(0, int(iterations)):
         max_rosters, rosters, remove = [], [], []
+        if (year, week) in INJURY_LIST:
+            remove = remove + INJURY_LIST[(year,week)]
+
         for max_flex in ALL_LINEUPS.iterkeys():
             rosters.append(
                 run(ALL_LINEUPS[max_flex], max_flex, remove, chosen_dict, year, week, max_similarity,\

@@ -4,6 +4,19 @@ MAX_SIMILARITY = 7
 ITERATIONS = 15
 MAX_EXPOSURE = 14
 
+WINNING_CUTOFFS = {
+  11: 105,
+  10: 121,
+  9: 173, 
+  8: 147,
+  7: 167,
+}
+
+### don't pick these players because of injury
+INJURY_LIST = {
+  (2015, 10): ['ALSHON_JEFFERY_WR']
+}
+
 FFPRO = 'http://www.fantasypros.com/nfl/projections/'
 
 ALL_POS = ['QB', 'RB', 'WR', 'TE', 'DST']
@@ -85,14 +98,6 @@ FANPROS_DST_NAMES = {'Detroit Lions': 'Lions', 'New York Giants': 'Giants', 'New
                      'Houston Texans': 'Texans', 'Dallas Cowboys': 'Cowboys', 'St. Louis Rams': 'Rams',
                      'Atlanta Falcons': 'Falcons', 'Cleveland Browns': 'Browns'}
 
-
-WINNING_CUTOFFS = {
-  11: 105,
-  10: 121,
-  9: 173, 
-  8: 147,
-  7: 167,
-}
 
 
 # standardizing names in this way matches 2-4 more people per week
