@@ -1,5 +1,9 @@
 CUR_WEEK = 12
 CUR_YEAR = 2015
+MAX_SIMILARITY = 7
+ITERATIONS = 15
+MAX_EXPOSURE = 14
+
 FFPRO = 'http://www.fantasypros.com/nfl/projections/'
 
 ALL_POS = ['QB', 'RB', 'WR', 'TE', 'DST']
@@ -43,9 +47,9 @@ ALL_LINEUPS = {
 OPTIMIZE_COMMAND_LINE = [
     ['-w', 'week of season', CUR_WEEK],
     ['-y', 'year of season', CUR_YEAR],
-    ['-s', 'max similarity', 7],
-    ['-i', 'iterations to run', 15],
-    ['-e', 'exposure to player - max avg points per game', 14]
+    ['-s', 'max similarity', MAX_SIMILARITY],
+    ['-i', 'iterations to run', ITERATIONS],
+    ['-e', 'exposure to player - max avg points per game', MAX_EXPOSURE]
 ]
 
 RT_YEAR = {2015: 'dk', 2014: 'dk', 2013: 'fd', 2012: 'fd', 2011: 'fd'}

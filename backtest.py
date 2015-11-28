@@ -3,19 +3,12 @@ from optimize import *
 year = 2015
 
 numweeks = CUR_WEEK - 1
-max_similarity = 7
-max_exposure = 14
-iterations = 15
-
-total_score = 0
-total_dev = 0
+max_similarity = MAX_SIMILARITY
+max_exposure = MAX_EXPOSURE
+iterations = ITERATIONS
 
 skip_week = 3
 total_score, total_dev = 0, 0
-
-### monte carlo
-# skip_week = 6
-# iterations = 100
 
 for week in range(numweeks, skip_week, -1):
 	median_score, std_dev, scores = optimize(week, year, iterations, max_similarity, max_exposure, False)
@@ -26,9 +19,9 @@ for week in range(numweeks, skip_week, -1):
 		returns = (good_lineups * 0.8 - (iterations - good_lineups)) / iterations
 		print "Week %s: %s/%s above cutoff" % (week, good_lineups, iterations)
 		print "Return: %s%%" % (returns * 100)
-		# print scores
+		print "Median, Stdev: (%s, %s)" % (median_score, std_dev)
 	else:
-		print "Week %s: (%s,%s)" % (week, median_score, std_dev)
+		print "Week %s: (%s, %s)" % (week, median_score, std_dev)
 
 	print "Cutoff: %d" % WINNING_CUTOFFS[week] if week in WINNING_CUTOFFS else "No Cutoff data"
 	print '----'

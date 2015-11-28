@@ -9,6 +9,8 @@ from constants import *
 CHANGE_RANK = {FP_DST: 6, FP_QB: 30, FP_FLEX:40}
 POS_DB = {'DST':FP_DST,'QB':FP_QB,'RB':FP_FLEX,'TE':FP_FLEX,'WR':FP_FLEX}
 
+pd.set_option('display.width', 400)
+
 def calc_dan_model(hf, pos):
     if pos in PROJECTION_TYPE[FP_QB]:
         ranks = hf[hf['Points'] > 0][hf['Pos'] == pos][hf['Avg Rank'] <
@@ -124,24 +126,30 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     hist_frame = pd.read_pickle('data/histdata')
-    cur_frame = pd.read_pickle('data/curprojs')
-
-    variance = pd.DataFrame(hist_frame.groupby(['PID'])['Points'].var() / (hist_frame.groupby(['PID'])['Points'].mean() ** 2))
-    variance.insert(0, 'PID', variance.index)
-    variance.columns = ['PID', 'Variance']
-
-    hist_frame = pd.merge(left=hist_frame, right=variance, on='PID')
-
+    
     for year in range(2014,CUR_YEAR + 1):
         max_week = max(hist_frame[hist_frame['Year'] == year]['Week'])
         for week in range(1, max_week + 1):
             if week == 1 and year == 2011:
                 continue
-            print year, week
+            print 'Projecting week %d, year %d' % (week, year)
+
+            players = hist_frame[hist_frame['Year'] == year][hist_frame['Week'] == week]
+            previous_weeks = hist_frame[hist_frame['Year'] == year][hist_frame['Week'] < week]
+
+            if len(previous_weeks):
+                variance = pd.DataFrame(previous_weeks.groupby('PID')['Points'].var() / 
+                    previous_weeks.groupby('PID')['Points'].mean() ** 2)
+                variance.insert(0, 'PID', variance.index)
+                variance.columns = ['PID', 'Variance']
+                players = pd.merge(left=players, right=variance, on='PID')
+                players['Variance'].fillna(0, inplace=True)
+            else:
+                players['Variance'] = 0
+
             i_frame = hist_frame[np.logical_or(hist_frame['Year'] < year, np.logical_and(
                 hist_frame['Year'] == year, hist_frame['Week'] < week))]
             reg_funcs = {pos: calc_new_model(i_frame, pos) for pos in ALL_POS}
-            write_week(hist_frame[hist_frame['Year'] == year][
-                       hist_frame['Week'] == week], reg_funcs, year, week)
-
+            write_week(players, reg_funcs, year, week)
+            
     print "Generated all projections"
