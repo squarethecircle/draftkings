@@ -11,7 +11,7 @@ skip_week = 3
 total_score, total_dev = 0, 0
 
 for week in range(numweeks, skip_week, -1):
-	median_score, std_dev, scores = optimize(week, year, iterations, max_similarity, max_exposure, False)
+	median_score, std_dev, scores = optimize(week, year, iterations, max_similarity, max_exposure, False, False)
 	total_score += median_score
 	total_dev += std_dev
 	if week in WINNING_CUTOFFS:

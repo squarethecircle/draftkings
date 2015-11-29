@@ -64,7 +64,8 @@ OPTIMIZE_COMMAND_LINE = [
     ['-y', 'year of season', CUR_YEAR],
     ['-s', 'max similarity', MAX_SIMILARITY],
     ['-i', 'iterations to run', ITERATIONS],
-    ['-e', 'exposure to player - max avg points per game', MAX_EXPOSURE]
+    ['-e', 'exposure to player - max avg points per game', MAX_EXPOSURE],
+    ['-o', 'use odds', False]
 ]
 
 RT_YEAR = {2015: 'dk', 2014: 'dk', 2013: 'fd', 2012: 'fd', 2011: 'fd'}

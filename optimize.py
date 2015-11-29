@@ -17,6 +17,8 @@ import warnings
 import csv
 import odds_analyzer
 
+use_odds = False
+
 warnings.filterwarnings("ignore")
 pd.set_option('display.width', 400)
 
@@ -28,7 +30,7 @@ for opt in OPTIMIZE_COMMAND_LINE:
 args = parser.parse_args()
 
 df = pd.read_pickle('data/histdata')
-odds_dict = odds_analyzer.get_w_l()
+odds_dict = {}
 
 get_score = lambda n, y, w: df[df['PID'] == n][
     df['Year'] == y][df['Week'] == w]['Points']
@@ -46,17 +48,22 @@ def run_solver(solver, all_players, year, week, max_flex, chosen_dict, max_simil
 
     for player in all_players:
         team = player.team
-        if player.team == 'FA':
-            winning = False
-        elif team in odds_dict[week]:
-            winning = odds_dict[week][team]
-        else:
-            winning = True
+
+        if use_odds:
+            if player.team == 'FA':
+                winning = False
+            elif team in odds_dict[week]:
+                winning = odds_dict[week][team]
+            else:
+                winning = True
             
-        if player in ineligible or not winning:
+        if player in ineligible:
             variables.append(solver.IntVar(0, 0, player.pid))
         else:
-            variables.append(solver.IntVar(0, 1, player.pid))
+            if not use_odds or (use_odds and winning):
+                variables.append(solver.IntVar(0, 1, player.pid))
+            else:
+                variables.append(solver.IntVar(0, 0, player.pid))
 
     objective = solver.Objective()
     objective.SetMaximization()
@@ -155,10 +162,16 @@ def print_exposure(exposure):
         print "{0: <20}({1} picks, {2} score)".format(p[0], str(p[1][0]), str(p[1][1]))
 
 def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity = args.s, \
-                max_exposure = args.e, print_terminal = True):
+                max_exposure = args.e, odds = args.o, print_terminal = True):
     chosen_dict = {}
     exposure = {} ## key: pid, val = [num picks, total proj_score]
     real_scores = []
+
+    if odds:
+        global use_odds, odds_dict
+        odds_dict = odds_analyzer.get_w_l()
+        use_odds = True
+
     for x in xrange(0, int(iterations)):
         max_rosters, rosters, remove = [], [], []
         if (year, week) in INJURY_LIST:
