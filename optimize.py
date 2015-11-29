@@ -15,6 +15,7 @@ from constants import *
 import pandas as pd
 import warnings
 import csv
+import odds_analyzer
 
 warnings.filterwarnings("ignore")
 pd.set_option('display.width', 400)
@@ -27,20 +28,32 @@ for opt in OPTIMIZE_COMMAND_LINE:
 args = parser.parse_args()
 
 df = pd.read_pickle('data/histdata')
+odds_dict = odds_analyzer.get_w_l()
+
 get_score = lambda n, y, w: df[df['PID'] == n][
     df['Year'] == y][df['Week'] == w]['Points']
 
-def run_solver(solver, all_players, max_flex, chosen_dict, max_similarity, exposure, max_exposure):
+def run_solver(solver, all_players, year, week, max_flex, chosen_dict, max_similarity, exposure, max_exposure):
     '''
     handle or-tools logic
     '''
     variables = []
 
+    
+
     # ineligible list of players, hit max exposure
     ineligible = set(filter(lambda x: x.pid in exposure and exposure[x.pid][1] >= max_exposure, all_players))
 
     for player in all_players:
-        if player in ineligible:
+        team = player.team
+        if player.team == 'FA':
+            winning = False
+        elif team in odds_dict[week]:
+            winning = odds_dict[week][team]
+        else:
+            winning = True
+            
+        if player in ineligible or not winning:
             variables.append(solver.IntVar(0, 0, player.pid))
         else:
             variables.append(solver.IntVar(0, 1, player.pid))
@@ -60,6 +73,7 @@ def run_solver(solver, all_players, max_flex, chosen_dict, max_similarity, expos
         for i, player in enumerate(all_players):
             res = was_chosen(lineup_num, player.pid)
             diversity_criterion.SetCoefficient(variables[i], res)
+
     for position, limit in max_flex:
         position_cap = solver.Constraint(limit, limit)
 
@@ -81,13 +95,14 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity, e
             for idx, row in enumerate(csvdata):
                 if idx > 0:
                     all_players.append(
-                        Player(row[0], generate_pid(row[1], row[0]), row[1], row[2]))
+                        Player(row[0], generate_pid(row[1], row[0]), row[1], row[2], DK_TO_PD[row[-1]]))
     else:
         for i, row in df[df['Year'] == year][df['Week'] == week].iterrows():
             if not np.isnan(row['Salary']) and row['Salary'] > 0:
                 all_players.append(
-                    Player(row['Pos'], row['PID'], row['Name'], row['Salary']))
+                    Player(row['Pos'], row['PID'], row['Name'], row['Salary'], row['Team']))
     # give each a ranking
+
     all_players = sorted(all_players, key=lambda x: x.cost, reverse=True)
     for idx, x in enumerate(all_players):
         x.cost_ranking = idx + 1
@@ -111,7 +126,7 @@ def run(max_flex, maxed_over, remove, chosen_dict, year, week, max_similarity, e
     all_players = filter(lambda x: x.pid not in remove, all_players)
 
     variables, solution = run_solver(
-        solver, all_players, max_flex, chosen_dict, max_similarity, exposure, max_exposure)
+        solver, all_players, year, week, max_flex, chosen_dict, max_similarity, exposure, max_exposure)
 
     if solution == solver.OPTIMAL:
         roster = Roster()

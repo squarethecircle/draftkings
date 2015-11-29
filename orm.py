@@ -42,7 +42,7 @@ class Roster:
 
 class Player:
 
-    def __init__(self, pos, pid, name, cost, proj=0, marked=None):
+    def __init__(self, pos, pid, name, cost, team, proj=0, marked=None):
         self.pos = pos
         self.name = name
         self.pid = pid
@@ -51,6 +51,7 @@ class Player:
         self.marked = marked
         self.cost_ranking = 0
         self.score = 0
+        self.team = team
 
     def player_report(self):
         print self.pos + ' ' + self.name + \
