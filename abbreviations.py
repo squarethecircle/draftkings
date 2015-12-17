@@ -60,5 +60,14 @@ DK_TO_PD = {'Ari': 'ARI',
 'StL': 'STL',
 'TB': 'TB',
 'Was' : 'WAS',
-'NE': 'NE'
+'NE': 'NE',
+'Pit': 'PIT',
+'NYG': 'NYG',
+'NO': 'NO',
+'Jax': 'JAX',
+'Ten': 'TEN',
+'Buf': 'BUF',
+'Cle': 'CLE'
+
+
 }

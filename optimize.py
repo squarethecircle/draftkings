@@ -154,12 +154,35 @@ def update_exposure(exposure, roster):
             exposure[p.pid][0] += 1
             exposure[p.pid][1] += p.proj
         else:
-            exposure[p.pid] = [1, p.proj]
+            exposure[p.pid] = [1, p.proj, p.cost]
 
 def print_exposure(exposure):
     print '===='
     for p in sorted(exposure.items(), key=lambda x: x[1], reverse=True):
-        print "{0: <20}({1} picks, {2} score)".format(p[0], str(p[1][0]), str(p[1][1]))
+        print "{0: <20}({1} picks, {2} score, ${3} salary)".format(p[0], str(p[1][0]), str(p[1][1]), str(p[1][2]))
+
+def explain(exposure, iterations):
+    print ''
+    print '===='
+    print 'Explanation for frequent picks'
+    print '==='
+
+    upper_bound = 7000
+    lower_bound = 5000
+    for p in sorted(exposure.items(), key=lambda x: x[1], reverse=True):
+        pid = p[0]
+        num_picks = p[1][0]
+        salary = p[1][2]
+        pick_threshold = iterations / 2
+
+        if num_picks > pick_threshold:
+            if salary >= upper_bound:
+                print '%s was picked %d times, expensive but predicted to do exceptionally' % (pid, num_picks)
+            elif salary <= lower_bound:
+                print '%s was picked %d times, cheap => a value pick' % (pid, num_picks)
+            else:
+                print '%s was picked %d times, moderate price and a safe bet' % (pid, num_picks)
+
 
 def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity = args.s, \
                 max_exposure = args.e, odds = args.o, print_terminal = True):
@@ -205,6 +228,9 @@ def optimize(week = args.w, year = args.y, iterations = args.i, max_similarity =
         print "Median Score: %d" % median_score
         print "Standard Deviation: %d" % std_dev
         print_exposure(exposure)
+
+    explain(exposure, iterations)
+
 
     return (median_score, std_dev, real_scores)
 

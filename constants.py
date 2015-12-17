@@ -16,6 +16,7 @@ WINNING_CUTOFFS = {
 
 ### don't pick these players because of injury
 INJURY_LIST = {
+  (2015, 12): ['CASE_KEENUM_QB', 'CHARCANDRICK_WEST_RB', 'JARVIS_LANDRY_WR'],
   (2015, 10): ['ALSHON_JEFFERY_WR']
 }
 
